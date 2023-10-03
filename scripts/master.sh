@@ -39,6 +39,7 @@ kubeadm token create --print-join-command > $config_path/join.sh
 curl https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/calico.yaml -O
 
 kubectl apply -f calico.yaml
+#kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
 
 sudo -i -u vagrant bash << EOF
 whoami
