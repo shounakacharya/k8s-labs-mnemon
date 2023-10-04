@@ -90,5 +90,128 @@ vagrant@master-node:~$ echo $TCP_INGRESS_PORT
 31928
 vagrant@master-node:~$
 ```
-3. Also set the Ingress Host environment variable to the IP of the first worker node. Technically 
+3. Also set the Ingress Host environment variable to the IP of the first worker node. Technically this could be the IP of any node in the cluster, but for uniformity purpose we would take the IP of the first worker node for this lab
+
+```bash
+vagrant@master-node:~$ kubectl get nodes -o wide
+NAME            STATUS   ROLES           AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+master-node     Ready    control-plane   94m   v1.27.1   192.168.56.20   <none>        Ubuntu 22.04.2 LTS   5.15.0-67-generic   cri-o://1.27.1
+worker-node01   Ready    worker          89m   v1.27.1   192.168.56.21   <none>        Ubuntu 22.04.2 LTS   5.15.0-67-generic   cri-o://1.27.1
+vagrant@master-node:~$ export INGRESS_HOST='192.168.56.21'
+vagrant@master-node:~$ echo $INGRESS_HOST
+192.168.56.21
+```
+
+4. Finally we create the GATEWAY_URL variable which would be the first point of contact for external applications or users hitting applications deployed inside the Istio Service Mesh
+```bash
+vagrant@master-node:~$ export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT
+vagrant@master-node:~$ echo $GATEWAY_URL
+192.168.56.21:31976
+```
+
+## Deploy the Sample [BookInfo Application](https://istio.io/latest/docs/examples/bookinfo/)
+
+![BookInfo Application Architecture](./1-Book-Info-Application)
+
+1. Make sure you are into the istio-1.19.0 folder:
+```bash
+vagrant@master-node:~/istio-1.19.0$ pwd
+/home/vagrant/istio-1.19.0
+vagrant@master-node:~/istio-1.19.0$
+```
+
+2. Deploy the BookInfo application located in the samples directory as under:
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+service/details created
+serviceaccount/bookinfo-details created
+deployment.apps/details-v1 created
+service/ratings created
+serviceaccount/bookinfo-ratings created
+deployment.apps/ratings-v1 created
+service/reviews created
+serviceaccount/bookinfo-reviews created
+deployment.apps/reviews-v1 created
+deployment.apps/reviews-v2 created
+deployment.apps/reviews-v3 created
+service/productpage created
+serviceaccount/bookinfo-productpage created
+deployment.apps/productpage-v1 created
+vagrant@master-node:~/istio-1.19.0$
+```
+
+3. The application will start. As each pod becomes ready, the Istio sidecar will be deployed along with it.
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl get services
+NAME          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+details       ClusterIP   172.17.62.73    <none>        9080/TCP   70s
+kubernetes    ClusterIP   172.17.0.1      <none>        443/TCP    14h
+productpage   ClusterIP   172.17.24.196   <none>        9080/TCP   70s
+ratings       ClusterIP   172.17.61.1     <none>        9080/TCP   70s
+reviews       ClusterIP   172.17.15.92    <none>        9080/TCP   70s
+vagrant@master-node:~/istio-1.19.0$
+```
+
+and
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl get pods
+NAME                             READY   STATUS    RESTARTS   AGE
+details-v1-5f4d584748-v4n98      2/2     Running   0          2m35s
+productpage-v1-564d4686f-qnjdf   2/2     Running   0          2m35s
+ratings-v1-686ccfb5d8-fhql9      2/2     Running   0          2m35s
+reviews-v1-86896b7648-dwkpj      2/2     Running   0          2m35s
+reviews-v2-b7dcd98fb-wd7hv       2/2     Running   0          2m35s
+reviews-v3-5c5cc7b6d-x4wck       2/2     Running   0          2m35s
+vagrant@master-node:~/istio-1.19.0$
+```
+
+3. Verify everything is working correctly up to this point. Run this command to see if the app is running inside the cluster and serving HTML pages by checking for the page title in the response:
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl exec "$(kubectl get pod -l app=ratings -o jsonpath='{.items[0].metadata.name}')" -c ratings -- curl -sS productpage:9080/productpage | grep -o "<title>.*</title>"
+<title>Simple Bookstore App</title>
+vagrant@master-node:~/istio-1.19.0$
+```
+
+## Open the application to Outside traffic
+
+The Bookinfo application is deployed but not accessible from the outside. To make it accessible, you need to create an Istio Ingress Gateway, which maps a path to a route at the edge of your mesh.
+
+1. Make sure you are into the istio-1.19.0 folder:
+```bash
+vagrant@master-node:~/istio-1.19.0$ pwd
+/home/vagrant/istio-1.19.0
+vagrant@master-node:~/istio-1.19.0$
+```
+
+2. Associate this application with the Istio gateway:
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+gateway.networking.istio.io/bookinfo-gateway created
+virtualservice.networking.istio.io/bookinfo created
+vagrant@master-node:~/istio-1.19.0$
+```
+
+3. Ensure that there are no issues with the configuration:
+```bash
+vagrant@master-node:~/istio-1.19.0$ istioctl analyze
+
+✔ No validation issues found when analyzing namespace: default.
+vagrant@master-node:~/istio-1.19.0$
+```
+
+## Verify External access
+
+1. Get the FQDN of the application by issuing the following command:
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ echo "http://$GATEWAY_URL/productpage"
+http://192.168.56.21:31976/productpage
+vagrant@master-node:~/istio-1.19.0$
+```
+
+2. Now paste the URL returned as output which is [http://192.168.56.21:31976/productpage](http://192.168.56.21:31976/productpage) into your browser. You should be able to access the following page:
+![BookInfo Web Page](./2-BookInfo-Page.png)
 
