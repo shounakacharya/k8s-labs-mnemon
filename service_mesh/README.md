@@ -215,3 +215,126 @@ vagrant@master-node:~/istio-1.19.0$
 2. Now paste the URL returned as output which is [http://192.168.56.21:31976/productpage](http://192.168.56.21:31976/productpage) into your browser. You should be able to access the following page:
 ![BookInfo Web Page](./2-BookInfo-Page.png)
 
+## View the Dashboard:
+Istio integrates with [several](https://istio.io/latest/docs/ops/integrations) different telemetry applications. These can help you gain an understanding of the structure of your service mesh, display the topology of the mesh, and analyze the health of your mesh.
+
+Use the following instructions to deploy the [Kiali](https://istio.io/latest/docs/ops/integrations/kiali/) dashboard, along with [Prometheus](https://istio.io/latest/docs/ops/integrations/prometheus/), [Grafana](https://istio.io/latest/docs/ops/integrations/grafana), and [Jaeger](https://istio.io/latest/docs/ops/integrations/jaeger/).
+
+1. Make sure you are into the istio-1.19.0 folder:
+```bash
+vagrant@master-node:~/istio-1.19.0$ pwd
+/home/vagrant/istio-1.19.0
+vagrant@master-node:~/istio-1.19.0$
+```
+
+2. Install [Kiali and the other addons](https://github.com/istio/istio/tree/release-1.19/samples/addons) and wait for them to be deployed.
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl apply -f samples/addons
+serviceaccount/grafana created
+configmap/grafana created
+service/grafana created
+deployment.apps/grafana created
+configmap/istio-grafana-dashboards created
+configmap/istio-services-grafana-dashboards created
+deployment.apps/jaeger created
+service/tracing created
+service/zipkin created
+service/jaeger-collector created
+serviceaccount/kiali created
+configmap/kiali created
+clusterrole.rbac.authorization.k8s.io/kiali-viewer created
+clusterrole.rbac.authorization.k8s.io/kiali created
+clusterrolebinding.rbac.authorization.k8s.io/kiali created
+role.rbac.authorization.k8s.io/kiali-controlplane created
+rolebinding.rbac.authorization.k8s.io/kiali-controlplane created
+service/kiali created
+deployment.apps/kiali created
+serviceaccount/loki created
+configmap/loki created
+configmap/loki-runtime created
+service/loki-memberlist created
+service/loki-headless created
+service/loki created
+statefulset.apps/loki created
+serviceaccount/prometheus created
+configmap/prometheus created
+clusterrole.rbac.authorization.k8s.io/prometheus created
+clusterrolebinding.rbac.authorization.k8s.io/prometheus created
+service/prometheus created
+deployment.apps/prometheus created
+vagrant@master-node:~/istio-1.19.0$
+```
+2. Check the status of the Kiali Dashboard service:
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl rollout status deployment/kiali -n istio-system
+deployment "kiali" successfully rolled out
+vagrant@master-node:~/istio-1.19.0$
+```
+
+3. To see some trace data on the service mesh, we need to access the application a few times. The following script does that and generates some test traffic which can be later viewed on the Kiali Dashboard
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ for i in $(seq 1 100); do curl -s -o /dev/null "http://$GATEWAY_URL/productpage"; done
+vagrant@master-node:~/istio-1.19.0$
+```
+
+4. We have to change the Kiali Service to type NodePort so that we are able to access the webpage from our machine's browser. In order to do that, first edit the Kiali Service by issuing the following command
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl edit svc kiali -n istio-system
+```
+This will Open the Following Page. Edit the Service Type highlighted in green in the diagram. This would have ClusterIP which you need to change to NodePort and save and exit by typing `[Esc]` Followed by `wq!`
+![Change Kiali Service Type](./3-Kiali-Service-Type-NodePort.png)
+
+5. Check the NodePort for the Kiali Service for port 20001
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl get svc -n istio-system
+NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)
+            AGE
+grafana                ClusterIP      172.17.42.11    <none>        3000/TCP
+            25m
+istio-egressgateway    ClusterIP      172.17.10.129   <none>        80/TCP,443/TCP
+            14h
+istio-ingressgateway   LoadBalancer   172.17.53.49    <pending>     15021:32561/TCP,80:31976/TCP,443:31109/TCP,31400:31928/TCP,15443:31497/TCP   14h
+istiod                 ClusterIP      172.17.62.28    <none>        15010/TCP,15012/TCP,443/TCP,15014/TCP
+            14h
+jaeger-collector       ClusterIP      172.17.37.207   <none>        14268/TCP,14250/TCP,9411/TCP,4317/TCP,4318/TCP
+            25m
+kiali                  NodePort       172.17.47.64    <none>        20001:30124/TCP,9090:32304/TCP
+            25m
+loki-headless          ClusterIP      None            <none>        3100/TCP
+            25m
+prometheus             ClusterIP      172.17.39.43    <none>        9090/TCP
+            25m
+tracing                ClusterIP      172.17.23.52    <none>        80/TCP,16685/TCP
+            25m
+zipkin                 ClusterIP      172.17.3.140    <none>        9411/TCP
+            25m
+vagrant@master-node:~/istio-1.19.0$
+```
+In this case the NodePort corresponding to the Kiali Service at 20001 is 30124
+
+6. Issue the following command to get the FQDN of the service so that it can be accessed from the host machine's browser.
+```bash
+vagrant@master-node:~/istio-1.19.0$ export KIALI_PORT=30124
+vagrant@master-node:~/istio-1.19.0$ echo $KIALI_PORT
+30124
+vagrant@master-node:~/istio-1.19.0$ echo "http://$INGRESS_HOST:$KIALI_PORT/kiali"
+http://192.168.56.21:30124/kiali
+vagrant@master-node:~/istio-1.19.0$
+```
+Notice the Ports that have been put based on the NodePort obtained in the previous step
+
+7. Acess the kiali webpage. Then on the Left Hand Menu -> Select Graph. On this page, select Namespace as default on the top left and time range as 30m on the top right as shown below:
+[Kiali WebPage](./4-kiali-web-console.png)
+
+8. Re-run the following script to generate more traffic if it was not visible:
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ for i in $(seq 1 100); do curl -s -o /dev/null "http://$GATEWAY_URL/productpage"; done
+vagrant@master-node:~/istio-1.19.0$
+```
+
+9. Feel free to play around with the options.
+
