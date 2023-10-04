@@ -111,7 +111,7 @@ vagrant@master-node:~$ echo $GATEWAY_URL
 
 ## Deploy the Sample [BookInfo Application](https://istio.io/latest/docs/examples/bookinfo/)
 
-![BookInfo Application Architecture](./1-Book-Info-Application)
+![BookInfo Application Architecture](./1-Book-Info-Application.png)
 
 1. Make sure you are into the istio-1.19.0 folder:
 ```bash
