@@ -327,7 +327,7 @@ vagrant@master-node:~/istio-1.19.0$
 Notice the Ports that have been put based on the NodePort obtained in the previous step
 
 7. Acess the kiali webpage. Then on the Left Hand Menu -> Select Graph. On this page, select Namespace as default on the top left and time range as 30m on the top right as shown below:
-[Kiali WebPage](./4-kiali-web-console.png)
+![Kiali WebPage](./4-kiali-web-console.png)
 
 8. Re-run the following script to generate more traffic if it was not visible:
 
