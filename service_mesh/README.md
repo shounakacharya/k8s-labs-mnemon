@@ -338,3 +338,169 @@ vagrant@master-node:~/istio-1.19.0$
 
 9. Feel free to play around with the options.
 
+
+## Request Routing
+
+This task shows you how to route requests dynamically to multiple versions of a microservice.
+
+The Istio Bookinfo sample consists of four separate microservices, each with multiple versions. Three different versions of one of the microservices, reviews, have been deployed and are running concurrently. To illustrate the problem this causes, access the Bookinfo app’s /productpage in a browser and refresh several times. The URL is http://$GATEWAY_URL/productpage, where $GATEWAY_URL is the External IP address of the ingress, as explained in the Bookinfo doc.
+
+You’ll notice that sometimes the book review output contains star ratings and other times it does not. This is because without an explicit default service version to route to, Istio routes requests to all available versions in a round robin fashion.
+
+The initial goal of this task is to apply rules that route all traffic to v1 (version 1) of the microservices. Later, you will apply a rule to route traffic based on the value of an HTTP request header.
+
+### Route to Version 1
+
+To route to one version only, you configure route rules that send traffic to default versions for the microservices.
+
+1. Make sure you are into the istio-1.19.0 folder:
+```bash
+vagrant@master-node:~/istio-1.19.0$ pwd
+/home/vagrant/istio-1.19.0
+vagrant@master-node:~/istio-1.19.0$
+```
+
+2. Run the following command to create the route rules:
+Istio uses virtual services to define route rules. Run the following command to apply virtual services that will route all traffic to v1 of each microservice:
+
+```bash
+vagrant@master-node:~/istio-1.19.0$ kubectl apply -f samples/bookinfo/networking/virtual-service-all-v1.yaml
+virtualservice.networking.istio.io/productpage created
+virtualservice.networking.istio.io/reviews created
+virtualservice.networking.istio.io/ratings created
+virtualservice.networking.istio.io/details created
+vagrant@master-node:~/istio-1.19.0$
+```
+Because configuration propagation is eventually consistent, wait a few seconds for the virtual services to take effect.
+
+3. Display the defined rules with either of the following command:
+
+```bash
+vagrant@master-node:~/istio-1.19.0$  kubectl get virtualservices -o yaml
+apiVersion: v1
+items:
+- apiVersion: networking.istio.io/v1beta1
+  kind: VirtualService
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.istio.io/v1alpha3","kind":"VirtualService","metadata":{"annotations":{},"name":"bookinfo","namespace":"default"},"spec":{"gateways":["bookinfo-gateway"],"hosts":["*"],"http":[{"match":[{"uri":{"exact":"/productpage"}},{"uri":{"prefix":"/static"}},{"uri":{"exact":"/login"}},{"uri":{"exact":"/logout"}},{"uri":{"prefix":"/api/v1/products"}}],"route":[{"destination":{"host":"productpage","port":{"number":9080}}}]}]}}
+    creationTimestamp: "2023-10-04T05:02:28Z"
+    generation: 1
+    name: bookinfo
+    namespace: default
+    resourceVersion: "30455"
+    uid: ec85dc4c-9670-4c03-b1dd-647079cf06bf
+  spec:
+    gateways:
+    - bookinfo-gateway
+    hosts:
+    - '*'
+    http:
+    - match:
+      - uri:
+          exact: /productpage
+      - uri:
+          prefix: /static
+      - uri:
+          exact: /login
+      - uri:
+          exact: /logout
+      - uri:
+          prefix: /api/v1/products
+      route:
+      - destination:
+          host: productpage
+          port:
+            number: 9080
+- apiVersion: networking.istio.io/v1beta1
+  kind: VirtualService
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.istio.io/v1alpha3","kind":"VirtualService","metadata":{"annotations":{},"name":"details","namespace":"default"},"spec":{"hosts":["details"],"http":[{"route":[{"destination":{"host":"details","subset":"v1"}}]}]}}
+    creationTimestamp: "2023-10-05T05:31:01Z"
+    generation: 1
+    name: details
+    namespace: default
+    resourceVersion: "62957"
+    uid: 912d1667-91d6-412c-a526-c23620f76bcc
+  spec:
+    hosts:
+    - details
+    http:
+    - route:
+      - destination:
+          host: details
+          subset: v1
+- apiVersion: networking.istio.io/v1beta1
+  kind: VirtualService
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.istio.io/v1alpha3","kind":"VirtualService","metadata":{"annotations":{},"name":"productpage","namespace":"default"},"spec":{"hosts":["productpage"],"http":[{"route":[{"destination":{"host":"productpage","subset":"v1"}}]}]}}
+    creationTimestamp: "2023-10-05T05:31:01Z"
+    generation: 1
+    name: productpage
+    namespace: default
+    resourceVersion: "62954"
+    uid: 6038ffc7-4aec-4d5d-a4c2-125d5e8ad8b3
+  spec:
+    hosts:
+    - productpage
+    http:
+    - route:
+      - destination:
+          host: productpage
+          subset: v1
+- apiVersion: networking.istio.io/v1beta1
+  kind: VirtualService
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.istio.io/v1alpha3","kind":"VirtualService","metadata":{"annotations":{},"name":"ratings","namespace":"default"},"spec":{"hosts":["ratings"],"http":[{"route":[{"destination":{"host":"ratings","subset":"v1"}}]}]}}
+    creationTimestamp: "2023-10-05T05:31:01Z"
+    generation: 1
+    name: ratings
+    namespace: default
+    resourceVersion: "62956"
+    uid: 3ae37727-91ff-42af-ac07-7b66cfad1c06
+  spec:
+    hosts:
+    - ratings
+    http:
+    - route:
+      - destination:
+          host: ratings
+          subset: v1
+- apiVersion: networking.istio.io/v1beta1
+  kind: VirtualService
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.istio.io/v1alpha3","kind":"VirtualService","metadata":{"annotations":{},"name":"reviews","namespace":"default"},"spec":{"hosts":["reviews"],"http":[{"route":[{"destination":{"host":"reviews","subset":"v1"}}]}]}}
+    creationTimestamp: "2023-10-05T05:31:01Z"
+    generation: 1
+    name: reviews
+    namespace: default
+    resourceVersion: "62955"
+    uid: f84a974d-8ca4-4a34-9646-0ce1cb049455
+  spec:
+    hosts:
+    - reviews
+    http:
+    - route:
+      - destination:
+          host: reviews
+          subset: v1
+kind: List
+metadata:
+  resourceVersion: ""
+vagrant@master-node:~/istio-1.19.0$
+```
+You have configured Istio to route to the v1 version of the Bookinfo microservices, most importantly the reviews service version 1.
+
+### Test the new Routing Configuration
+
+You can easily test the new configuration by once again refreshing the /productpage of the Bookinfo app in your browser. Notice that the reviews part of the page displays with no rating stars, no matter how many times you refresh. This is because you configured Istio to route all traffic for the reviews service to the version reviews:v1 and this version of the service does not access the star ratings service.
+
