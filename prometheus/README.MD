@@ -1,0 +1,4 @@
+# Prometheus Lab
+
+In this lab we would focus on installing Prometheus on a Kubernetes Cluster Directly. We can also install Prometheus on a standalone machine as well, however installing Prometheus on a Kubernetes cluster leads to many benefits, including ease of configuration management and as well as monitoring the same cluster on which it is deployed. This is not a production grade deployment and for that please refer to the [official Prometheus installation documentation](https://prometheus.io/docs/prometheus/latest/installation/) for a complete set of alternatives and best practices. The following diagram recaps the architecture as was discussed during the lecture:
+![Prometheus Architecture](./1-prometheus-architecture-min.png) 
