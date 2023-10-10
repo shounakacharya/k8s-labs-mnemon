@@ -751,4 +751,4 @@ n1-cfcbcb76-jq6jp   1/1     Running   0          75s   172.16.158.29   worker-no
 n1-cfcbcb76-xrnxq   1/1     Running   0          75s   172.16.158.30   worker-node02   <none>           <none>
 vagrant@master-node:~$
 ```
-As you can see, since the pods in the deployment does not have a toleration by default for the taint in worker-node01 all of them are deployed in worker-node02
+As you can see, since the pods in the deployment do not have a toleration by default for the taint in worker-node01 all of them are deployed in worker-node02
