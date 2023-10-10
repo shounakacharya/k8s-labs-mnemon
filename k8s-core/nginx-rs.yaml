@@ -1,0 +1,23 @@
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx
+  namespace: default
+spec:
+  replicas: 3
+  template:
+    metadata:
+      name: nginx
+      labels:
+        run: nginx
+        type: front-end
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+  selector:
+        matchLabels:
+            type: front-end

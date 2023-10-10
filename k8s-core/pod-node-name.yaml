@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+    name: simple-webapp
+    labels:
+        app: app1
+        type: front-end
+spec:
+    containers:
+    - name: nginx-controller
+      image: nginx
+    nodeName: worker-node01
