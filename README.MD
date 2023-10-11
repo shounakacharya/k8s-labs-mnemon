@@ -2,21 +2,19 @@
 
 ## Getting this repo 
 
-You can get this repository, either by downloading and installing git on your machine as shown in the following two steps
+You can get this repository, either by downloading and installing git on your machine or downloading as a zip. Both the methods are shown below:
 
-### Install Git on your machine
+### Installing through git
 
-Download and install git for your machine by following the [official git documentation](https://git-scm.com/downloads)
+    - **Install Git on your machine:** Download and install git for your machine by following the [official git documentation](https://git-scm.com/downloads)
 
-### Clone This Repository
-
-Clone this repository to your machine by issuing:
+    - **Clone This Repository:** Clone this repository to your machine by issuing:
 
 ```bash
 git clone https://github.com/shounakacharya/k8s-labs-mnemon.git
 ```
 
-OR
+### OR
 
 ### Downlad a zip of this repository
 
