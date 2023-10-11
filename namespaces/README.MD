@@ -506,3 +506,101 @@ vagrant@master-node:~$
 ```
 
 As we saw, we hit the LimitRange for this namespace. Just to recap, quota defines the total amount of resources within a namespace, while limit ranges define the resource usage for a single pod within the same namespace.
+
+
+## Cleaning Up
+
+1. Remove all the ResourceQuotas and LimitRanges
+
+```bash
+vagrant@master-node:~$ kubectl describe ns default
+Name:         default
+Labels:       kubernetes.io/metadata.name=default
+Annotations:  <none>
+Status:       Active
+
+Resource Quotas
+  Name:          project-quota
+  Resource       Used  Hard
+  --------       ---   ---
+  limits.cpu     0     1
+  limits.memory  0     1Gi
+  pods           5     10
+
+Resource Limits
+ Type       Resource  Min  Max    Default Request  Default Limit  Max Limit/Request Ratio
+ ----       --------  ---  ---    ---------------  -------------  -----------------------
+ Container  cpu       0    200m   100m             100m           -
+ Container  memory    0    512Mi  256Mi            256Mi          -
+vagrant@master-node:~$ kubectl get resourcequota
+NAME            AGE   REQUEST      LIMIT
+project-quota   22h   pods: 5/10   limits.cpu: 0/1, limits.memory: 0/1Gi
+vagrant@master-node:~$ kubectl delete resourcequota project-quota
+resourcequota "project-quota" deleted
+vagrant@master-node:~$ kubectl get limitranges
+NAME                     CREATED AT
+container-limit-ranges   2023-10-10T14:41:53Z
+vagrant@master-node:~$ kubectl delete limitranges container-limit-ranges
+limitrange "container-limit-ranges" deleted
+vagrant@master-node:~$
+```
+2. Delete all the previously created deployments and daemonsets
+
+Get all the remaining resources
+
+```bash
+vagrant@master-node:~$ kubectl get all
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/n1-cfcbcb76-8xzgf        1/1     Running   2          26h
+pod/n1-cfcbcb76-jq6jp        1/1     Running   2          26h
+pod/n1-cfcbcb76-xrnxq        1/1     Running   2          26h
+pod/nginx-5974479d99-mxr5w   1/1     Running   0          162m
+pod/nginx-ds-48p8v           1/1     Running   2          27h
+pod/nginx-ds-vhhsj           1/1     Running   2          27h
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   172.17.0.1   <none>        443/TCP   29h
+
+NAME                      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+daemonset.apps/nginx-ds   1         1         1       1            1           <none>          27h
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/n1      3/3     3            3           26h
+deployment.apps/nginx   1/1     1            1           25h
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/n1-cfcbcb76        3         3         3       26h
+replicaset.apps/nginx-5974479d99   1         1         1       25h
+replicaset.apps/nginx-796f587cf7   0         0         0       25h
+vagrant@master-node:~$
+
+```
+
+Now delete the deployments and daemonsets:
+
+```bash
+vagrant@master-node:~$ kubectl delete deploy nginx n1
+deployment.apps "nginx" deleted
+deployment.apps "n1" deleted
+vagrant@master-node:~$ kubectl delete ds nginx-ds
+daemonset.apps "nginx-ds" deleted
+vagrant@master-node:~$
+```
+
+3. Finally untaint nodes
+
+Get the taint from worker-node01
+```bash
+vagrant@master-node:~$ kubectl describe node worker-node01 | grep -i Taint
+Taints:             app=blue:NoSchedule
+vagrant@master-node:~$
+```
+Now untaint the node. Notice the `-` sign on the same key=value:effect of the taint. This removes the taint
+
+```bash
+vagrant@master-node:~$ kubectl taint nodes worker-node01 app=blue:NoSchedule-
+node/worker-node01 untainted
+vagrant@master-node:~$ kubectl describe node worker-node01 | grep -i Taint
+Taints:             <none>
+vagrant@master-node:~$
+```
