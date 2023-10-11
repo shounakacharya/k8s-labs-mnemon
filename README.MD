@@ -6,10 +6,10 @@ You can get this repository, either by downloading and installing git on your ma
 
 ### Installing through git
 
-    - **Install Git on your machine:** Download and install git for your machine by following the [official git documentation](https://git-scm.com/downloads)
 
-    - **Clone This Repository:** Clone this repository to your machine by issuing:
+1. **Install Git on your machine:** Download and install git for your machine by following the [official git documentation](https://git-scm.com/downloads)
 
+2. **Clone This Repository:** Clone this repository to your machine by issuing:
 ```bash
 git clone https://github.com/shounakacharya/k8s-labs-mnemon.git
 ```
