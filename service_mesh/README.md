@@ -1,4 +1,54 @@
 # Service Mesh with Istio
+
+Open a shell in your host machine and navigate to the root directory of this repository from where you ssh to the master node previously. You should be in the `k8s-labs-mnemon` directory. From this directory issue the following commands to get the names of the booted nodes
+
+```bash
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon> vagrant status
+Current machine states:
+
+master                    running (virtualbox)
+node01                    running (virtualbox)
+node02                    running (virtualbox)
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run `vagrant status NAME`.
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon>
+```
+
+As we can see we have a 3 node cluster. 1 master and 2 worker nodes
+
+Now from the the shell ssh to the master node:
+
+```bash
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon> vagrant ssh master
+Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.15.0-67-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Thu Oct 12 03:49:22 PM UTC 2023
+
+  System load:  1.01416015625      Users logged in:        0
+  Usage of /:   19.5% of 30.34GB   IPv4 address for eth0:  10.0.2.15
+  Memory usage: 23%                IPv4 address for eth1:  192.168.56.20
+  Swap usage:   0%                 IPv4 address for tunl0: 172.16.77.128
+  Processes:    182
+
+ * Introducing Expanded Security Maintenance for Applications.
+   Receive updates to over 25,000 software packages with your
+   Ubuntu Pro subscription. Free for personal use.
+
+     https://ubuntu.com/pro
+
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+Last login: Thu Oct 12 12:42:29 2023 from 10.0.2.2
+vagrant@master-node:~$
+```
+
 ## Download Istio
 1. Go to the [Istio release](https://github.com/istio/istio/releases/tag/1.19.0) page to download the installation file for your OS, or download and extract the latest release automatically (Linux or macOS). We would be using the version 1.19.0 for this lab purposes. In this lab, since we would be using Linux and a specific version, we would be directly passing in these infomration in the curl command directly as under:
 ```bash

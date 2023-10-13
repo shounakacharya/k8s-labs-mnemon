@@ -1,5 +1,62 @@
 # Namespaces and Resource Controls
 
+Open a shell in your host machine and navigate to the root directory of this repository from where you ssh to the master node previously. You should be in the `k8s-labs-mnemon` directory. From this directory issue the following commands to get the names of the booted nodes
+
+```bash
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon> vagrant status
+Current machine states:
+
+master                    running (virtualbox)
+node01                    running (virtualbox)
+node02                    running (virtualbox)
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run `vagrant status NAME`.
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon>
+```
+
+As we can see we have a 3 node cluster. 1 master and 2 worker nodes
+
+Now from the the shell ssh to the master node:
+
+```bash
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon> vagrant ssh master
+Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.15.0-67-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Thu Oct 12 03:49:22 PM UTC 2023
+
+  System load:  1.01416015625      Users logged in:        0
+  Usage of /:   19.5% of 30.34GB   IPv4 address for eth0:  10.0.2.15
+  Memory usage: 23%                IPv4 address for eth1:  192.168.56.20
+  Swap usage:   0%                 IPv4 address for tunl0: 172.16.77.128
+  Processes:    182
+
+ * Introducing Expanded Security Maintenance for Applications.
+   Receive updates to over 25,000 software packages with your
+   Ubuntu Pro subscription. Free for personal use.
+
+     https://ubuntu.com/pro
+
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+Last login: Thu Oct 12 12:42:29 2023 from 10.0.2.2
+vagrant@master-node:~$
+```
+
+Navigate to the folder `/vagrant/namespaces`
+
+```bash
+vagrant@master-node:~$ cd /vagrant/namespaces/
+vagrant@master-node:/vagrant/namespaces$
+```
+
+
 ## Namespaces
 Kubernetes supports multiple virtual clusters backed by the same physical cluster. These virtual clusters are called namespaces. Within the same namespace, kubernetes objects name should be unique. Different objects in different namespaces may have the same name.
 
@@ -9,20 +66,20 @@ Kubernetes comes with a few initial namespaces. Some of the important ones are a
 To get all the namespaces, issue the following command:
 
 ```bash
-vagrant@master-node:~$ kubectl get namespaces
+vagrant@master-node:/vagrant/namespaces$ kubectl get namespaces
 NAME                   STATUS   AGE
 default                Active   3h31m
 kube-node-lease        Active   3h31m
 kube-public            Active   3h31m
 kube-system            Active   3h31m
 kubernetes-dashboard   Active   3h23m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 To see all the objects for a particular namespace:
 
 ```bash
-vagrant@master-node:~$ kubectl get all --namespace default
+vagrant@master-node:/vagrant/namespaces$ kubectl get all --namespace default
 NAME                        READY   STATUS    RESTARTS   AGE
 pod/n1-cfcbcb76-8xzgf       1/1     Running   0          15m
 pod/n1-cfcbcb76-jq6jp       1/1     Running   0          15m
@@ -46,12 +103,12 @@ deployment.apps/nginx   3/3     3            3           19m
 NAME                              DESIRED   CURRENT   READY   AGE
 replicaset.apps/n1-cfcbcb76       3         3         3       15m
 replicaset.apps/nginx-79748db8b   3         3         3       19m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 or to view objects across all namespaces:
 
 ```bash
-vagrant@master-node:~$ kubectl get deploy -A
+vagrant@master-node:/vagrant/namespaces$ kubectl get deploy -A
 NAMESPACE              NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
 default                n1                          3/3     3            3           16m
 default                nginx                       3/3     3            3           20m
@@ -60,7 +117,7 @@ kube-system            coredns                     2/2     2            2       
 kube-system            metrics-server              1/1     1            1           3h34m
 kubernetes-dashboard   dashboard-metrics-scraper   1/1     1            1           3h25m
 kubernetes-dashboard   kubernetes-dashboard        1/1     1            1           3h25m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 Please, note that not all kubernetes objects are in namespaces, i.e. nodes, are cluster resources not included in any namespaces.
@@ -76,9 +133,9 @@ metadata:
 Create the namespace and see if it is created:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f projectone-ns.yaml
+vagrant@master-node:/vagrant/namespaces$ kubectl create -f projectone-ns.yaml
 namespace/projectone created
-vagrant@master-node:~$ kubectl get ns
+vagrant@master-node:/vagrant/namespaces$ kubectl get ns
 NAME                   STATUS   AGE
 default                Active   3h36m
 kube-node-lease        Active   3h36m
@@ -86,7 +143,7 @@ kube-public            Active   3h36m
 kube-system            Active   3h36m
 kubernetes-dashboard   Active   3h28m
 projectone             Active   65s
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 Observe the file nginx-pod-projectone.yaml
@@ -97,17 +154,17 @@ Observe the file nginx-pod-projectone.yaml
 Create the Pod and list the Pod in the projectone namespace:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f nginx-pod-projectone.yaml
+vagrant@master-node:/vagrant/namespaces$ kubectl create -f nginx-pod-projectone.yaml
 pod/mynginx created
-vagrant@master-node:~$ kubectl get po -n projectone
+vagrant@master-node:/vagrant/namespaces$ kubectl get po -n projectone
 NAME      READY   STATUS    RESTARTS   AGE
 mynginx   1/1     Running   0          10s
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 Deleting a namespace will result in deleting of all resources within the namespace:
 
 ```bash
-vagrant@master-node:~$ kubectl get po -A
+vagrant@master-node:/vagrant/namespaces$ kubectl get po -A
 NAMESPACE              NAME                                         READY   STATUS    RESTARTS        AGE
 default                n1-cfcbcb76-8xzgf                            1/1     Running   0               24m
 default                n1-cfcbcb76-jq6jp                            1/1     Running   0               24m
@@ -137,9 +194,9 @@ projectone             mynginx                                      1/1     Runn
 ```
 Deleting projectone namespace leads to deletion of the pods in that namespace as well, as shown below:
 ```bash
-vagrant@master-node:~$ kubectl delete ns projectone
+vagrant@master-node:/vagrant/namespaces$ kubectl delete ns projectone
 namespace "projectone" deleted
-vagrant@master-node:~$ kubectl get po -A
+vagrant@master-node:/vagrant/namespaces$ kubectl get po -A
 NAMESPACE              NAME                                         READY   STATUS    RESTARTS        AGE
 default                n1-cfcbcb76-8xzgf                            1/1     Running   0               25m
 default                n1-cfcbcb76-jq6jp                            1/1     Running   0               25m
@@ -165,7 +222,7 @@ kube-system            kube-scheduler-master-node                   1/1     Runn
 kube-system            metrics-server-754586b847-fbs8q              1/1     Running   3 (3h37m ago)   3h43m
 kubernetes-dashboard   dashboard-metrics-scraper-5cb4f4bb9c-gmf7d   1/1     Running   0               3h34m
 kubernetes-dashboard   kubernetes-dashboard-6967859bff-znz7b        1/1     Running   0               3h34m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 ## Quotas and Limits
@@ -194,9 +251,9 @@ spec:
 Create the quota and see the default namespace now
 
 ```bash
-vagrant@master-node:~$ kubectl create -f quota.yaml
+vagrant@master-node:/vagrant/namespaces$ kubectl create -f quota.yaml
 resourcequota/project-quota created
-vagrant@master-node:~$ kubectl describe ns default
+vagrant@master-node:/vagrant/namespaces$ kubectl describe ns default
 Name:         default
 Labels:       kubernetes.io/metadata.name=default
 Annotations:  <none>
@@ -211,15 +268,15 @@ Resource Quotas
   pods           8     10
 
 No LimitRange resource.
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 Current namespace has now hard constraints set to 1 core CPU, 1 GB of RAM and max 10 running pods. Having set constraints for the namespace, all further requests for pod creation inside that namespace, must specify resources consumption, otherwise the quota system will reject the pod creation.
 
 ```bash
-vagrant@master-node:~$ kubectl run nginx-test --image=nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl run nginx-test --image=nginx
 Error from server (Forbidden): pods "nginx-test" is forbidden: failed quota: project-quota: must specify limits.cpu for: nginx-test; limits.memory for: nginx-test
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 The reason is that, by default, a pod try to allocate all the CPU and memory available in the system. Since we have limited cpu and memory consumption for the namespaces, the quota system cannot honor a request for pod creation crossing these limits.
@@ -264,53 +321,53 @@ spec:
 Delete the nginx deployment first if it exists
 
 ```bash
-vagrant@master-node:~$ kubectl get deployments
+vagrant@master-node:/vagrant/namespaces$ kubectl get deployments
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 n1      3/3     3            3           37m
 nginx   3/3     3            3           41m
-vagrant@master-node:~$ kubectl delete deployment nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl delete deployment nginx
 deployment.apps "nginx" deleted
 ```
 
 Then create the deployment with limits specified:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f nginx-deploy-limited.yaml
+vagrant@master-node:/vagrant/namespaces$ kubectl create -f nginx-deploy-limited.yaml
 deployment.apps/nginx created
-vagrant@master-node:~$ kubectl get deploy
+vagrant@master-node:/vagrant/namespaces$ kubectl get deploy
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 n1      3/3     3            3           49m
 nginx   1/1     1            1           6s
-vagrant@master-node:~$ kubectl get po -l run=nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl get po -l run=nginx
 NAME                     READY   STATUS    RESTARTS   AGE
 nginx-796f587cf7-ll68z   1/1     Running   0          3m37s
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 Let's scale the replicas to 3 replicas and see what happens:
 
 ```bash
-vagrant@master-node:~$ kubectl scale deploy nginx --replicas=3
+vagrant@master-node:/vagrant/namespaces$ kubectl scale deploy nginx --replicas=3
 deployment.apps/nginx scaled
-vagrant@master-node:~$ kubectl get deploy
+vagrant@master-node:/vagrant/namespaces$ kubectl get deploy
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 n1      3/3     3            3           53m
 nginx   2/3     2            2           4m31s
-vagrant@master-node:~$ kubectl get po -l run=nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl get po -l run=nginx
 NAME                     READY   STATUS    RESTARTS   AGE
 nginx-796f587cf7-ll68z   1/1     Running   0          4m38s
 nginx-796f587cf7-ndst7   1/1     Running   0          11s
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 As you can see it could scale up to 2 replicas only as the limits on memory was exhausted:
 
 ```bash
-vagrant@master-node:~$ kubectl get rs
+vagrant@master-node:/vagrant/namespaces$ kubectl get rs
 NAME               DESIRED   CURRENT   READY   AGE
 n1-cfcbcb76        3         3         3       55m
 nginx-796f587cf7   3         2         2       5m50s
-vagrant@master-node:~$ kubectl describe rs nginx-796f587cf7
+vagrant@master-node:/vagrant/namespaces$ kubectl describe rs nginx-796f587cf7
 Name:           nginx-796f587cf7
 Namespace:      default
 Selector:       pod-template-hash=796f587cf7,run=nginx
@@ -355,7 +412,7 @@ Events:
   Warning  FailedCreate      95s                replicaset-controller  Error creating: pods "nginx-796f587cf7-vtmmc" is forbidden: exceeded quota: project-quota, requested: limits.memory=512Mi, used: limits.memory=1Gi, limited: limits.memory=1Gi
   Warning  FailedCreate      95s                replicaset-controller  Error creating: pods "nginx-796f587cf7-829gn" is forbidden: exceeded quota: project-quota, requested: limits.memory=512Mi, used: limits.memory=1Gi, limited: limits.memory=1Gi
   Warning  FailedCreate      29s (x6 over 93s)  replicaset-controller  (combined from similar events): Error creating: pods "nginx-796f587cf7-4wf2q" is forbidden: exceeded quota: project-quota, requested: limits.memory=512Mi, used: limits.memory=1Gi, limited: limits.memory=1Gi
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 ### Limit Ranges
 
@@ -386,9 +443,9 @@ spec:
 Create the LimitRanges object:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f limitranges.yaml
+vagrant@master-node:/vagrant/namespaces$ kubectl create -f limitranges.yaml
 limitrange/container-limit-ranges created
-vagrant@master-node:~$ kubectl describe ns default
+vagrant@master-node:/vagrant/namespaces$ kubectl describe ns default
 Name:         default
 Labels:       kubernetes.io/metadata.name=default
 Annotations:  <none>
@@ -407,30 +464,30 @@ Resource Limits
  ----       --------  ---  ---    ---------------  -------------  -----------------------
  Container  memory    0    512Mi  256Mi            256Mi          -
  Container  cpu       0    200m   100m             100m           -
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 Scale the replicas of the nginx deployment to zero
 
 ```bash
-vagrant@master-node:~$ kubectl scale deploy nginx --replicas=0
+vagrant@master-node:/vagrant/namespaces$ kubectl scale deploy nginx --replicas=0
 deployment.apps/nginx scaled
-vagrant@master-node:~$ kubectl get deploy nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl get deploy nginx
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 nginx   0/0     0            0           15m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 Edit the deployment by issuing the following command:
 
 ```bash
-vagrant@master-node:~$ kubectl edit deploy nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl edit deploy nginx
 ```
 
 In the file that gets opened, scroll down to the `limits` section and make the cpu as `250m`. Save and exit the file. After exiting the edit mode you should get the following output
 
 ```bash
-vagrant@master-node:~$ kubectl edit deploy nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl edit deploy nginx
 
 deployment.apps/nginx edited
 ```
@@ -438,19 +495,19 @@ deployment.apps/nginx edited
 Check the Deployment again:
 
 ```bash
-vagrant@master-node:~$ kubectl get deploy nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl get deploy nginx
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 nginx   0/0     0            0           18m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 Scale the deployment to one replica
 
 ```bash
-vagrant@master-node:~$ kubectl get deploy nginx
+vagrant@master-node:/vagrant/namespaces$ kubectl get deploy nginx
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 nginx   0/1     0            0           19m
-vagrant@master-node:~$ kubectl get rs
+vagrant@master-node:/vagrant/namespaces$ kubectl get rs
 NAME               DESIRED   CURRENT   READY   AGE
 n1-cfcbcb76        3         3         3       68m
 nginx-5974479d99   1         0         0       90s
@@ -459,7 +516,7 @@ nginx-796f587cf7   0         0         0       19m
 As you can see the pods are not getting created. Since we have edited the deployment we see two Replicasets for the deployment. Describe the Replicaset which has the DESIRED as 1
 
 ```bash
-vagrant@master-node:~$ kubectl describe rs nginx-5974479d99
+vagrant@master-node:/vagrant/namespaces$ kubectl describe rs nginx-5974479d99
 Name:           nginx-5974479d99
 Namespace:      default
 Selector:       pod-template-hash=5974479d99,run=nginx
@@ -502,7 +559,7 @@ Events:
   Warning  FailedCreate  41s               replicaset-controller  Error creating: pods "nginx-5974479d99-l2sn9" is forbidden: maximum cpu usage per Container is 200m, but limit is 250m
   Warning  FailedCreate  41s               replicaset-controller  Error creating: pods "nginx-5974479d99-bnwnc" is forbidden: maximum cpu usage per Container is 200m, but limit is 250m
   Warning  FailedCreate  1s (x5 over 39s)  replicaset-controller  (combined from similar events): Error creating: pods "nginx-5974479d99-wpskr" is forbidden: maximum cpu usage per Container is 200m, but limit is 250m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 As we saw, we hit the LimitRange for this namespace. Just to recap, quota defines the total amount of resources within a namespace, while limit ranges define the resource usage for a single pod within the same namespace.
@@ -513,7 +570,7 @@ As we saw, we hit the LimitRange for this namespace. Just to recap, quota define
 1. Remove all the ResourceQuotas and LimitRanges
 
 ```bash
-vagrant@master-node:~$ kubectl describe ns default
+vagrant@master-node:/vagrant/namespaces$ kubectl describe ns default
 Name:         default
 Labels:       kubernetes.io/metadata.name=default
 Annotations:  <none>
@@ -532,24 +589,24 @@ Resource Limits
  ----       --------  ---  ---    ---------------  -------------  -----------------------
  Container  cpu       0    200m   100m             100m           -
  Container  memory    0    512Mi  256Mi            256Mi          -
-vagrant@master-node:~$ kubectl get resourcequota
+vagrant@master-node:/vagrant/namespaces$ kubectl get resourcequota
 NAME            AGE   REQUEST      LIMIT
 project-quota   22h   pods: 5/10   limits.cpu: 0/1, limits.memory: 0/1Gi
-vagrant@master-node:~$ kubectl delete resourcequota project-quota
+vagrant@master-node:/vagrant/namespaces$ kubectl delete resourcequota project-quota
 resourcequota "project-quota" deleted
-vagrant@master-node:~$ kubectl get limitranges
+vagrant@master-node:/vagrant/namespaces$ kubectl get limitranges
 NAME                     CREATED AT
 container-limit-ranges   2023-10-10T14:41:53Z
-vagrant@master-node:~$ kubectl delete limitranges container-limit-ranges
+vagrant@master-node:/vagrant/namespaces$ kubectl delete limitranges container-limit-ranges
 limitrange "container-limit-ranges" deleted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 2. Delete all the previously created deployments and daemonsets
 
 Get all the remaining resources
 
 ```bash
-vagrant@master-node:~$ kubectl get all
+vagrant@master-node:/vagrant/namespaces$ kubectl get all
 NAME                         READY   STATUS    RESTARTS   AGE
 pod/n1-cfcbcb76-8xzgf        1/1     Running   2          26h
 pod/n1-cfcbcb76-jq6jp        1/1     Running   2          26h
@@ -572,35 +629,35 @@ NAME                               DESIRED   CURRENT   READY   AGE
 replicaset.apps/n1-cfcbcb76        3         3         3       26h
 replicaset.apps/nginx-5974479d99   1         1         1       25h
 replicaset.apps/nginx-796f587cf7   0         0         0       25h
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 
 ```
 
 Now delete the deployments and daemonsets:
 
 ```bash
-vagrant@master-node:~$ kubectl delete deploy nginx n1
+vagrant@master-node:/vagrant/namespaces$ kubectl delete deploy nginx n1
 deployment.apps "nginx" deleted
 deployment.apps "n1" deleted
-vagrant@master-node:~$ kubectl delete ds nginx-ds
+vagrant@master-node:/vagrant/namespaces$ kubectl delete ds nginx-ds
 daemonset.apps "nginx-ds" deleted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 
 3. Finally untaint nodes
 
 Get the taint from worker-node01
 ```bash
-vagrant@master-node:~$ kubectl describe node worker-node01 | grep -i Taint
+vagrant@master-node:/vagrant/namespaces$ kubectl describe node worker-node01 | grep -i Taint
 Taints:             app=blue:NoSchedule
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```
 Now untaint the node. Notice the `-` sign on the same key=value:effect of the taint. This removes the taint
 
 ```bash
-vagrant@master-node:~$ kubectl taint nodes worker-node01 app=blue:NoSchedule-
+vagrant@master-node:/vagrant/namespaces$ kubectl taint nodes worker-node01 app=blue:NoSchedule-
 node/worker-node01 untainted
-vagrant@master-node:~$ kubectl describe node worker-node01 | grep -i Taint
+vagrant@master-node:/vagrant/namespaces$ kubectl describe node worker-node01 | grep -i Taint
 Taints:             <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/namespaces$
 ```

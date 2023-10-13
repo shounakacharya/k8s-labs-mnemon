@@ -1,5 +1,61 @@
 # K8s Core Objects Lab
 
+Open a shell in your host machine and navigate to the root directory of this repository from where you ssh to the master node previously. You should be in the `k8s-labs-mnemon` directory. From this directory issue the following commands to get the names of the booted nodes
+
+```bash
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon> vagrant status
+Current machine states:
+
+master                    running (virtualbox)
+node01                    running (virtualbox)
+node02                    running (virtualbox)
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run `vagrant status NAME`.
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon>
+```
+
+As we can see we have a 3 node cluster. 1 master and 2 worker nodes
+
+Now from the the shell ssh to the master node:
+
+```bash
+PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon> vagrant ssh master
+Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.15.0-67-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Thu Oct 12 03:49:22 PM UTC 2023
+
+  System load:  1.01416015625      Users logged in:        0
+  Usage of /:   19.5% of 30.34GB   IPv4 address for eth0:  10.0.2.15
+  Memory usage: 23%                IPv4 address for eth1:  192.168.56.20
+  Swap usage:   0%                 IPv4 address for tunl0: 172.16.77.128
+  Processes:    182
+
+ * Introducing Expanded Security Maintenance for Applications.
+   Receive updates to over 25,000 software packages with your
+   Ubuntu Pro subscription. Free for personal use.
+
+     https://ubuntu.com/pro
+
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+Last login: Thu Oct 12 12:42:29 2023 from 10.0.2.2
+vagrant@master-node:~$
+```
+
+Navigate to the folder `/vagrant/k8s-core`
+
+```bash
+vagrant@master-node:~$ cd /vagrant/k8s-core/
+vagrant@master-node:/vagrant/k8s-core$
+```
+
 ## Pods
 
 In Kubernetes, a group of one or more containers is called a pod. Containers in a pod are deployed together, and are started, stopped, and replicated as a group. The simplest pod definition describes the deployment of a single container. For example, an nginx web server pod might be defined as such
@@ -23,24 +79,24 @@ spec:
 A pod definition is a declaration of a desired state. Desired state is a very important concept in the Kubernetes model. Many things present a desired state to the system, and it is Kubernetes’ responsibility to make sure that the current state matches the desired state. For example, when you create a Pod, you declare that you want the containers in it to be running. If the containers happen to not be running (e.g. program failure, …), Kubernetes will continue to (re-)create them for you in order to drive them to the desired state. This process continues until the Pod is deleted.
 
 ```bash
-vagrant@master-node:~$ kubectl create -f pod-nginx.yaml
+vagrant@master-node:/vagrant/k8s-core~$ kubectl create -f pod-nginx.yaml
 pod/mynginx created
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core~$
 ```
 
 list all the pods
 
 ```bash
-vagrant@master-node:~$ kubectl get po -o wide
+vagrant@master-node:/vagrant/k8s-core~$ kubectl get po -o wide
 NAME      READY   STATUS    RESTARTS   AGE     IP              NODE            NOMINATED NODE   READINESS GATES
 mynginx   1/1     Running   0          2m18s   172.16.87.193   worker-node01   <none>           <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core~$
 ```
 
 describe the pod:
 
 ```bash
-vagrant@master-node:~$ kubectl describe po mynginx
+vagrant@master-node:/vagrant/k8s-core~$ kubectl describe po mynginx
 Name:             mynginx
 Namespace:        default
 Priority:         0
@@ -94,15 +150,15 @@ Events:
   Normal  Pulled     2m4s   kubelet            Successfully pulled image "nginx:latest" in 1m6.427288057s (1m6.427302625s including waiting)
   Normal  Created    2m4s   kubelet            Created container mynginx
   Normal  Started    2m4s   kubelet            Started container mynginx
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core~$
 ```
 
 Now delete the Pod:
 
 ```bash
-vagrant@master-node:~$ kubectl delete po mynginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl delete po mynginx
 pod "mynginx" deleted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 In the example above, we had a pod with a single container nginx running inside.
@@ -135,39 +191,39 @@ spec:
 Here, we have added two labels to the pod. Create the Pod:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f pod-nginx-label.yaml
+vagrant@master-node:/vagrant/k8s-core$ kubectl create -f pod-nginx-label.yaml
 pod/mynginx created
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 You can then get the pod by mentioning the label in the get pod command:
 
 ```bash
-vagrant@master-node:~$ kubectl get po -l type=webserver
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po -l type=webserver
 NAME      READY   STATUS    RESTARTS   AGE
 mynginx   1/1     Running   0          18s
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 You can also add labels dynamically to Kubernetes objects like Pods, nodes etc. Please execute the following commands in order to implement the same:
 
 ```bash
-vagrant@master-node:~$ kubectl label pod mynginx tier=fe
+vagrant@master-node:/vagrant/k8s-core$ kubectl label pod mynginx tier=fe
 pod/mynginx labeled
-vagrant@master-node:~$ kubectl get po -l tier=fe
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po -l tier=fe
 NAME      READY   STATUS    RESTARTS   AGE
 mynginx   1/1     Running   0          2m20s
-vagrant@master-node:~$ kubectl label node worker-node01 rack=R1
+vagrant@master-node:/vagrant/k8s-core$ kubectl label node worker-node01 rack=R1
 node/worker-node01 labeled
-vagrant@master-node:~$ kubectl label node worker-node02 rack=R2
+vagrant@master-node:/vagrant/k8s-core$ kubectl label node worker-node02 rack=R2
 node/worker-node02 labeled
-vagrant@master-node:~$ kubectl get nodes -l rack=R1
+vagrant@master-node:/vagrant/k8s-core$ kubectl get nodes -l rack=R1
 NAME            STATUS   ROLES    AGE   VERSION
 worker-node01   Ready    worker   50m   v1.27.1
-vagrant@master-node:~$ kubectl get nodes -l rack=R2
+vagrant@master-node:/vagrant/k8s-core$ kubectl get nodes -l rack=R2
 NAME            STATUS   ROLES    AGE   VERSION
 worker-node02   Ready    worker   46m   v1.27.1
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 
@@ -214,18 +270,18 @@ spec:
 Create and see the RS as well as the pods that were created by issuing the following set of commands:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f nginx-rs.yaml
+vagrant@master-node:/vagrant/k8s-core$ kubectl create -f nginx-rs.yaml
 replicaset.apps/nginx created
-vagrant@master-node:~$ kubectl get rs
+vagrant@master-node:/vagrant/k8s-core$ kubectl get rs
 NAME    DESIRED   CURRENT   READY   AGE
 nginx   3         3         1       4s
-vagrant@master-node:~$ kubectl get po
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po
 NAME          READY   STATUS    RESTARTS   AGE
 mynginx       1/1     Running   0          13m
 nginx-2qksr   1/1     Running   0          8s
 nginx-5mlvj   1/1     Running   0          8s
 nginx-njzvc   1/1     Running   0          8s
-vagrant@master-node:~$ kubectl describe rs nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl describe rs nginx
 Name:         nginx
 Namespace:    default
 Selector:     type=front-end
@@ -250,32 +306,32 @@ Events:
   Normal  SuccessfulCreate  107s  replicaset-controller  Created pod: nginx-5mlvj
   Normal  SuccessfulCreate  107s  replicaset-controller  Created pod: nginx-njzvc
   Normal  SuccessfulCreate  107s  replicaset-controller  Created pod: nginx-2qksr
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 The ReplicaSet makes it easy to scale the number of replicas up or down, either manually or by an auto-scaling control agent, by simply updating the replicas field. For example, scale dow to zero replicas in order to delete all pods controlled by a given replicaset
 
 ```bash
-vagrant@master-node:~$ kubectl scale rs nginx --replicas=0
+vagrant@master-node:/vagrant/k8s-core$ kubectl scale rs nginx --replicas=0
 replicaset.apps/nginx scaled
-vagrant@master-node:~$ kubectl get rs
+vagrant@master-node:/vagrant/k8s-core$ kubectl get rs
 NAME    DESIRED   CURRENT   READY   AGE
 nginx   0         0         0       3m8s
-vagrant@master-node:~$ kubectl get po
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po
 NAME      READY   STATUS    RESTARTS   AGE
 mynginx   1/1     Running   0          16m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 We can also scale out the ReplicaSet to create new Pods:
 
 ```bash
-vagrant@master-node:~$ kubectl scale rs nginx --replicas=5
+vagrant@master-node:/vagrant/k8s-core$ kubectl scale rs nginx --replicas=5
 replicaset.apps/nginx scaled
-vagrant@master-node:~$ kubectl get rs
+vagrant@master-node:/vagrant/k8s-core$ kubectl get rs
 NAME    DESIRED   CURRENT   READY   AGE
 nginx   5         5         0       3m59s
-vagrant@master-node:~$ kubectl get po
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po
 NAME          READY   STATUS              RESTARTS   AGE
 mynginx       1/1     Running             0          17m
 nginx-cphrk   0/1     ContainerCreating   0          8s
@@ -283,7 +339,7 @@ nginx-mm8rh   0/1     ContainerCreating   0          8s
 nginx-tzvmz   1/1     Running             0          8s
 nginx-vk5n5   0/1     ContainerCreating   0          8s
 nginx-z2ld7   1/1     Running             0          8s
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 Also in case of failure of a node, the replicaset takes care of keep the same number of pods by scheduling the containers running on the failed node to the remaining nodes in the cluster.
@@ -291,9 +347,9 @@ Also in case of failure of a node, the replicaset takes care of keep the same nu
 To delete a replicaset:
 
 ```bash
-vagrant@master-node:~$ kubectl delete rs nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl delete rs nginx
 replicaset.apps "nginx" deleted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 ## Deployments
@@ -340,23 +396,23 @@ spec:
 Then delete the Pod which we created during step 2 for the Pod labelling excercise as it has the same label as the pods that will be deployed by this deployment:
 
 ```bash
-vagrant@master-node:~$ kubectl delete po mynginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl delete po mynginx
 pod "mynginx" deleted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 and then create the deployment:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f nginx-deploy.yaml
+vagrant@master-node:/vagrant/k8s-core$ kubectl create -f nginx-deploy.yaml
 deployment.apps/nginx created
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 The deployment creates the following objects:
 
 ```bash
-vagrant@master-node:~$ kubectl get all -l run=nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl get all -l run=nginx
 NAME                         READY   STATUS    RESTARTS   AGE
 pod/nginx-54d484cf5c-qvttb   1/1     Running   0          5m34s
 pod/nginx-54d484cf5c-tb7z7   1/1     Running   0          5m34s
@@ -367,7 +423,7 @@ deployment.apps/nginx   3/3     3            3           5m34s
 
 NAME                               DESIRED   CURRENT   READY   AGE
 replicaset.apps/nginx-54d484cf5c   3         3         3       5m34s
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 According to the definitions set in the file, above, there are three pods and a replica set. You may notice that the name of the replica set is always <name-of-deployment>-<hash value of the pod template>
@@ -375,12 +431,12 @@ According to the definitions set in the file, above, there are three pods and a 
 A deployment - as a replicaset, can be scaled up and down
 
 ```bash
-vagrant@master-node:~$ kubectl scale deploy nginx --replicas=6
+vagrant@master-node:/vagrant/k8s-core$ kubectl scale deploy nginx --replicas=6
 deployment.apps/nginx scaled
-vagrant@master-node:~$ kubectl get deploy nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl get deploy nginx
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 nginx   6/6     6            6           15m
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 In addition to replicas management, a deployment also defines the strategy for updates pods:
@@ -398,9 +454,9 @@ In the snippet above, we set the update strategy as rolling update. During the l
 For example, to update the pods with a different version of nginx image
 
 ```bash
-vagrant@master-node:~$ kubectl set image deploy nginx nginx=nginx:1.9.1
+vagrant@master-node:/vagrant/k8s-core$ kubectl set image deploy nginx nginx=nginx:1.9.1
 deployment.apps/nginx image updated
-vagrant@master-node:~$ kubectl rollout status deploy nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl rollout status deploy nginx
 Waiting for deployment "nginx" rollout to finish: 2 out of 6 new replicas have been updated...
 Waiting for deployment "nginx" rollout to finish: 2 out of 6 new replicas have been updated...
 Waiting for deployment "nginx" rollout to finish: 2 out of 6 new replicas have been updated...
@@ -423,10 +479,10 @@ Waiting for deployment "nginx" rollout to finish: 1 old replicas are pending ter
 Waiting for deployment "nginx" rollout to finish: 1 old replicas are pending termination...
 Waiting for deployment "nginx" rollout to finish: 5 of 6 updated replicas are available...
 deployment "nginx" successfully rolled out
-vagrant@master-node:~$ kubectl get deploy nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl get deploy nginx
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 nginx   6/6     6            6           18m
-vagrant@master-node:~$ kubectl get po
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po
 NAME                   READY   STATUS    RESTARTS   AGE
 nginx-956858c7-b6ncm   1/1     Running   0          60s
 nginx-956858c7-bsn5x   1/1     Running   0          95s
@@ -434,7 +490,7 @@ nginx-956858c7-cgvcv   1/1     Running   0          71s
 nginx-956858c7-p65vx   1/1     Running   0          61s
 nginx-956858c7-pjsts   1/1     Running   0          51s
 nginx-956858c7-wnwjn   1/1     Running   0          95s
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 Deployment can ensure that only a certain number of pods may be down while they are being updated. By default, it ensures that at least 25% less than the desired number of pods are up. Deployment can also ensure that only a certain number of pods may be created above the desired number of pods. By default, it ensures that at most 25% more than the desired number of pods are up.
@@ -474,13 +530,13 @@ spec:
 If we create the daemonset and see the output of the daemonset and all the resources it created, we would see that one nginx pod runs on each worker node:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f nginx-daemon-set.yaml
+vagrant@master-node:/vagrant/k8s-core$ kubectl create -f nginx-daemon-set.yaml
 daemonset.apps/nginx-ds created
-vagrant@master-node:~$ kubectl get all -l run=nginx-ds -o wide
+vagrant@master-node:/vagrant/k8s-core$ kubectl get all -l run=nginx-ds -o wide
 NAME                 READY   STATUS    RESTARTS   AGE   IP              NODE            NOMINATED NODE   READINESS GATES
 pod/nginx-ds-48p8v   1/1     Running   0          41s   172.16.87.206   worker-node01   <none>           <none>
 pod/nginx-ds-vhhsj   1/1     Running   0          41s   172.16.158.13   worker-node02   <none>           <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 Following things need to be understood for DaemonSets:
@@ -513,9 +569,9 @@ spec:
 Create the Pod and see the Pod getting run:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f pod-node-name.yaml
+vagrant@master-node:/vagrant/k8s-core$ kubectl create -f pod-node-name.yaml
 pod/simple-webapp created
-vagrant@master-node:~$ kubectl get po -o wide
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po -o wide
 NAME                   READY   STATUS    RESTARTS   AGE    IP              NODE            NOMINATED NODE   READINESS GATES
 nginx-956858c7-b6ncm   1/1     Running   0          40m    172.16.87.205   worker-node01   <none>           <none>
 nginx-956858c7-bsn5x   1/1     Running   0          41m    172.16.87.203   worker-node01   <none>           <none>
@@ -526,32 +582,32 @@ nginx-956858c7-wnwjn   1/1     Running   0          41m    172.16.158.10   worke
 nginx-ds-48p8v         1/1     Running   0          21m    172.16.87.206   worker-node01   <none>           <none>
 nginx-ds-vhhsj         1/1     Running   0          21m    172.16.158.13   worker-node02   <none>           <none>
 simple-webapp          1/1     Running   0          3m2s   172.16.87.207   worker-node01   <none>           <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 As we can see that the Pod `simple-webapp` was able to get scheduled on worker-node01. Let's now delete the pod as we would be using pods with the same name for the next set of steps:
 
 ```bash
-vagrant@master-node:~$ kubectl delete po simple-webapp
+vagrant@master-node:/vagrant/k8s-core$ kubectl delete po simple-webapp
 pod "simple-webapp" deleted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 ### Taints and Tolerations
 
 Let's taint the worker-node01 with the following key/value pairs:
 
 ```bash
-vagrant@master-node:~$ kubectl taint nodes worker-node01 app=blue:NoSchedule
+vagrant@master-node:/vagrant/k8s-core$ kubectl taint nodes worker-node01 app=blue:NoSchedule
 node/worker-node01 tainted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 Let us restart all the pods of the deployment that we created earlier:
 
 ```bash
-vagrant@master-node:~$ kubectl get deploy
+vagrant@master-node:/vagrant/k8s-core$ kubectl get deploy
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 nginx   6/6     6            6           73m
-vagrant@master-node:~$ kubectl get po -l run=nginx -o wide
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po -l run=nginx -o wide
 NAME                   READY   STATUS    RESTARTS   AGE   IP              NODE            NOMINATED NODE   READINESS GATES
 nginx-956858c7-b6ncm   1/1     Running   0          56m   172.16.87.205   worker-node01   <none>           <none>
 nginx-956858c7-bsn5x   1/1     Running   0          57m   172.16.87.203   worker-node01   <none>           <none>
@@ -559,28 +615,28 @@ nginx-956858c7-cgvcv   1/1     Running   0          56m   172.16.87.204   worker
 nginx-956858c7-p65vx   1/1     Running   0          56m   172.16.158.11   worker-node02   <none>           <none>
 nginx-956858c7-pjsts   1/1     Running   0          56m   172.16.158.12   worker-node02   <none>           <none>
 nginx-956858c7-wnwjn   1/1     Running   0          57m   172.16.158.10   worker-node02   <none>           <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 As we can see the replicas are distributed between worker nodes 1 and 2. Let's restart the pods of the deployment by running the following command and wait for the restart to complete
 
 ```bash
-vagrant@master-node:~$ kubectl rollout restart deploy nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl rollout restart deploy nginx
 deployment.apps/nginx restarted
 
-vagrant@master-node:~$ kubectl rollout status deploy nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl rollout status deploy nginx
 Waiting for deployment "nginx" rollout to finish: 2 out of 6 new replicas have been updated...
 Waiting for deployment "nginx" rollout to finish: 2 out of 6 new replicas have been updated...
 Waiting for deployment "nginx" rollout to finish: 2 out of 6 new replicas have been updated...
 Waiting for deployment "nginx" rollout to finish: 3 out of 6 new replicas have been updated...
 ...
 deployment "nginx" successfully rolled out
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 Let's look at the Pods of this deployment and where are they scheduled:
 
 ```bash
-vagrant@master-node:~$ kubectl get po -l run=nginx -o wide
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po -l run=nginx -o wide
 NAME                     READY   STATUS    RESTARTS   AGE   IP              NODE            NOMINATED NODE   READINESS GATES
 nginx-67668f65b7-6g5jl   1/1     Running   0          97s   172.16.158.22   worker-node02   <none>           <none>
 nginx-67668f65b7-78sjb   1/1     Running   0          78s   172.16.158.26   worker-node02   <none>           <none>
@@ -588,7 +644,7 @@ nginx-67668f65b7-gq6mv   1/1     Running   0          72s   172.16.158.27   work
 nginx-67668f65b7-qsfgc   1/1     Running   0          90s   172.16.158.24   worker-node02   <none>           <none>
 nginx-67668f65b7-sc77j   1/1     Running   0          84s   172.16.158.25   worker-node02   <none>           <none>
 nginx-67668f65b7-w57wg   1/1     Running   0          97s   172.16.158.23   worker-node02   <none>           <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 As we can see, all the pods are deployed on worker-node02 as worker-node01 is tainted. Let's add a toleration in the Pod Spec within the Deployment:
@@ -596,9 +652,9 @@ As we can see, all the pods are deployed on worker-node02 as worker-node01 is ta
 First Delete the Deployment:
 
 ```bash
-vagrant@master-node:~$ kubectl delete deployment nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl delete deployment nginx
 deployment.apps "nginx" deleted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 No consider the file nginx-deploy-tolerations.yaml:
@@ -643,14 +699,14 @@ spec:
 Create the deployment and observe how the Pods are scheduled:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f nginx-deploy-tolerations.yaml
+vagrant@master-node:/vagrant/k8s-core$ kubectl create -f nginx-deploy-tolerations.yaml
 deployment.apps/nginx created
-vagrant@master-node:~$ kubectl get po -l run=nginx -o wide
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po -l run=nginx -o wide
 NAME                     READY   STATUS    RESTARTS   AGE   IP              NODE            NOMINATED NODE   READINESS GATES
 nginx-559fdf7f69-dxlbm   1/1     Running   0          19s   172.16.87.211   worker-node01   <none>           <none>
 nginx-559fdf7f69-j5wwx   1/1     Running   0          19s   172.16.87.210   worker-node01   <none>           <none>
 nginx-559fdf7f69-m826n   1/1     Running   0          19s   172.16.158.28   worker-node02   <none>           <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 As you can see the Pods are again scheduled between, both worker-node01 and worker-node02.
@@ -663,17 +719,17 @@ We have already seen how to use nodeName in Pod definitions. Let's now use NodeA
 Let's delete the deployment first:
 
 ```bash
-vagrant@master-node:~$ kubectl delete deployment nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl delete deployment nginx
 deployment.apps "nginx" deleted
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 First Label the node where we want to run our application:
 
 ```bash
-vagrant@master-node:~$ kubectl label nodes worker-node01 only=nginx
+vagrant@master-node:/vagrant/k8s-core$ kubectl label nodes worker-node01 only=nginx
 node/worker-node01 labeled
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 
@@ -727,14 +783,14 @@ spec:
 Create the deployment and observer the pods:
 
 ```bash
-vagrant@master-node:~$ kubectl create -f nginx-deploy-nodeaffinity.yaml
+vagrant@master-node:/vagrant/k8s-core$ kubectl create -f nginx-deploy-nodeaffinity.yaml
 deployment.apps/nginx created
-vagrant@master-node:~$ kubectl get po -l run=nginx -o wide
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po -l run=nginx -o wide
 NAME                    READY   STATUS    RESTARTS   AGE   IP              NODE            NOMINATED NODE   READINESS GATES
 nginx-79748db8b-74kvp   1/1     Running   0          62s   172.16.87.212   worker-node01   <none>           <none>
 nginx-79748db8b-c7zph   1/1     Running   0          62s   172.16.87.214   worker-node01   <none>           <none>
 nginx-79748db8b-ln2rg   1/1     Running   0          62s   172.16.87.213   worker-node01   <none>           <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 
 As we can see the pods in the deployment are only running on worker-node01.
@@ -742,14 +798,14 @@ As we can see the pods in the deployment are only running on worker-node01.
 Since the worker-node01 is also tainted, no other pods will be accepted here, till the time the pods tolerate the taints. Let's verify by creating a deployment with 3 replicas imperatively
 
 ```bash
-vagrant@master-node:~$ kubectl create deployment n1 --image=nginx --replicas=3
+vagrant@master-node:/vagrant/k8s-core$ kubectl create deployment n1 --image=nginx --replicas=3
 deployment.apps/n1 created
-vagrant@master-node:~$ kubectl get po -l app=n1 -o wide
+vagrant@master-node:/vagrant/k8s-core$ kubectl get po -l app=n1 -o wide
 NAME                READY   STATUS    RESTARTS   AGE   IP              NODE            NOMINATED NODE   READINESS GATES
 n1-cfcbcb76-8xzgf   1/1     Running   0          75s   172.16.158.31   worker-node02   <none>           <none>
 n1-cfcbcb76-jq6jp   1/1     Running   0          75s   172.16.158.29   worker-node02   <none>           <none>
 n1-cfcbcb76-xrnxq   1/1     Running   0          75s   172.16.158.30   worker-node02   <none>           <none>
-vagrant@master-node:~$
+vagrant@master-node:/vagrant/k8s-core$
 ```
 As you can see, since the pods in the deployment do not have a toleration by default for the taint in worker-node01 all of them are deployed in worker-node02
 
