@@ -153,7 +153,7 @@ In this case the ArgoCD UI should be accessible on port 30972 from the browser o
 2. Download and install the ArgoCD CLI tool:
 
 ```bash
-vagrant@master-node:~$ curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/stable/download/argocd-linux-amd64
+vagrant@master-node:~$ curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
 vagrant@master-node:~$ ls -ltr
 total 248
 drwxr-x--- 6 vagrant vagrant   4096 Sep  1 15:14 istio-1.19.0
