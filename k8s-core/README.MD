@@ -16,7 +16,7 @@ VM, run `vagrant status NAME`.
 PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon>
 ```
 
-As we can see we have a 3 node cluster. 1 master and 2 worker nodes
+As we can see we have a 3 node cluster. 1 master and 2 worker nodes.
 
 Now from the the shell ssh to the master node:
 
