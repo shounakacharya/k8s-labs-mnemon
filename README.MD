@@ -189,7 +189,7 @@ vagrant@master-node:~$
 vagrant@master-node:~$ exit
 ```
 
-12. You are back to the host machine prompt. Halt the cluster so that the cluster does not need to be re-installed and can be re-used later.
+12. You are back to the host machine prompt. Halt the cluster so that the cluster does not need to be re-installed and can be re-used later..
 
 ```bash
 PS C:\Users\shoun\OneDrive\Documents\kubernetes\k8s-labs-mnemon> vagrant halt
